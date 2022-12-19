@@ -40,7 +40,8 @@ class MyApp(QMainWindow):
             QIcon("icons/右旋转.png"), "向右旋转90", self)
         self.action_left_rotate = QAction(
             QIcon("icons/左旋转.png"), "向左旋转90°", self)
-        self.action_histogram = QAction(QIcon("icons/直方图.png"), "直方图", self)
+        self.action_histogram = QAction(
+            QIcon("icons/直方图.png"), "直方图", self)
         self.action_start_play = QAction(
             QIcon("icons/startplay.png"), "开始播放", self)
         self.action_pause_play = QAction(
@@ -75,12 +76,12 @@ class MyApp(QMainWindow):
                                  self.action_last_frame, self.action_next_frame
                                   ))
 
-        self.useListWidget = UsedListWidget(self)
-        self.funcListWidget = FuncListWidget(self)
-        self.stackedWidget = StackedWidget(self)
-        self.fileSystemTreeView = FileSystemTreeView(self)
-        self.graphicsView = GraphicsView(self)
-        self.videoProducer = videoSegmentationProducer(self)
+        self.useListWidget = UsedListWidget(self)   #已添加的功能显示 右侧
+        self.funcListWidget = FuncListWidget(self)  #图像对应的具体操作 上侧
+        self.stackedWidget = StackedWidget(self)    #每个操作的属性功能 右侧
+        self.fileSystemTreeView = FileSystemTreeView(self)      #文件选择 左侧
+        self.graphicsView = GraphicsView(self)      #图像操作 中央
+        self.videoProducer = videoSegmentationProducer(self)    #视频操作 中央
 
         self.dock_file = QDockWidget(self)
         self.dock_file.setWidget(self.fileSystemTreeView)
@@ -109,7 +110,7 @@ class MyApp(QMainWindow):
         self.addDockWidget(Qt.TopDockWidgetArea, self.dock_func)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dock_used)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dock_attr)
-
+    
         self.setWindowTitle('VOStyle 面向视频的像素智能标注系统')
         self.setWindowIcon(QIcon('icons/main.png'))
         self.src_img = None
