@@ -115,6 +115,7 @@ class MyApp(QMainWindow):
         self.setWindowIcon(QIcon('icons/main.png'))
         self.src_img = None
         self.cur_img = None
+        self.seg_img = None
         self.seging = False
         self.cur_video = None
 
@@ -158,7 +159,11 @@ class MyApp(QMainWindow):
             img = self.cur_img.copy()
         for i in range(self.useListWidget.count()):
             if isinstance(self.useListWidget.item(i), SegmentationItem):
-                img = self.useListWidget.item(i)(img, self.seg_mode)
+                if self.seg_mode == 1 or self.seg_mode ==3:
+                    res,img = self.useListWidget.item(i)(img, self.seg_mode)
+                    self.seg_img = res
+                else:
+                    img = self.useListWidget.item(i)(img, self.seg_mode)
             else:
                 img = self.useListWidget.item(i)(img)
         return img

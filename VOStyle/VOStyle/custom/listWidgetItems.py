@@ -266,7 +266,7 @@ class SegmentationItem(MyItem):
             self.current_mask = combine_mask(self.current_mask, res)
 
         if seg_mode == 1 or seg_mode == 3:
-            return show_image_process(img, self.current_mask, seg_mode)
+            return res,show_image_process(img, self.current_mask, seg_mode)
         elif seg_mode == 4:
             return img
 

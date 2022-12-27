@@ -26,6 +26,9 @@ from python_script.networks.mainnetwork import *
 import torch
 import numpy as np
 
+import settting
+
+
 
 def GetDistanceMap_click(mask, cp, pad_pixel):
     def find_point(id_x, id_y, ids):
@@ -196,8 +199,7 @@ def pred_click(image, bgpoint, cppoint, net, mode):
     mask = IOG_getmask(bgpoint, cppoint, img, net, False)
     mask = Image.fromarray(mask.astype('uint8')).convert('RGB')
     mask = cv2.cvtColor(np.asarray(mask), cv2.COLOR_RGB2BGR)
-    random_color = [random.randint(0, 255), random.randint(
-        0, 255), random.randint(0, 255)]
+    random_color = settting.PEN_COLOR
 
     sum_mask = mask.sum(axis=2)
     for x in range(mask.shape[0]):

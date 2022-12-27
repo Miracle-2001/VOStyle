@@ -443,8 +443,9 @@ class SegmentationWidget(TableWidget):
         self.seg_cp_up.setObjectName("cpoint update")
         self.seg_cp_up.setText("上传")
 
+
         self.setColumnCount(2)
-        self.setRowCount(6)
+        self.setRowCount(8)
 
         self.setCellWidget(0, 0, self.seg_tpoint)
         self.setCellWidget(0, 1, self.seg_tp_up)
@@ -455,39 +456,58 @@ class SegmentationWidget(TableWidget):
         self.seg_cpoint.clicked.connect(self.draw_cpoint)
         self.seg_tp_up.clicked.connect(self.update_tp)
         self.seg_cp_up.clicked.connect(self.update_cp)
+
+
         self.x0 = 0
         self.y0 = 0
         self.x1 = 0
         self.y1 = 0
         self.xc = 0
         self.yc = 0
+
+        self.pencil = QPushButton()
+        self.pencil.setText("神奇画笔")
+        self.pencil.setObjectName("pencil button")
+        self.setItem(0, 0, QTableWidgetItem('pencil_button'))
+        
+        self.eraser = QPushButton()
+        self.eraser.setText("魔法橡皮")
+        self.eraser.setObjectName("eraser button")
+        self.setItem(1, 0, QTableWidgetItem('eraser_button'))
+
         self.go = QPushButton()
         self.go.setText("语义分割")
         self.go.setObjectName("start button")
-        self.setItem(0, 0, QTableWidgetItem('start_button'))
+        self.setItem(2, 0, QTableWidgetItem('start_button'))
         self.get_mask = QPushButton()
         self.get_mask.setText("快乐扣图")
         self.get_mask.setObjectName("get mask")
-        self.setItem(1, 0, QTableWidgetItem("get_mask"))
+        self.setItem(3, 0, QTableWidgetItem("get_mask"))
         self.save_mask = QPushButton()
         self.save_mask.setText("保存标注")
         self.save_mask.setObjectName("save mask")
-        self.setItem(2, 0, QTableWidgetItem("save_mask"))
+        self.setItem(4, 0, QTableWidgetItem("save_mask"))
 
         self.show_mask = QPushButton()
         self.show_mask.setText("显示标注")
         self.show_mask.setObjectName("show mask")
-        self.setItem(3, 0, QTableWidgetItem("show_mask"))
+        self.setItem(5, 0, QTableWidgetItem("show_mask"))
 
-        self.setCellWidget(2, 0, self.go)
-        self.setCellWidget(3, 0, self.get_mask)
-        self.setCellWidget(4, 0, self.save_mask)
-        self.setCellWidget(5, 0, self.show_mask)
+        self.setCellWidget(2, 0, self.pencil)
+        self.setCellWidget(3, 0, self.eraser)
+        self.setCellWidget(4, 0, self.go)
+        self.setCellWidget(5, 0, self.get_mask)
+        self.setCellWidget(6, 0, self.save_mask)
+        self.setCellWidget(7, 0, self.show_mask)
         self.setSpan(2, 0, 1, 2)
         self.setSpan(3, 0, 1, 2)
         self.setSpan(4, 0, 1, 2)
         self.setSpan(5, 0, 1, 2)
+        self.setSpan(6, 0, 1, 2)
+        self.setSpan(7, 0, 1, 2)
         self.signal_connect()
+        self.pencil.clicked.connect(self.use_pencil)
+        self.eraser.clicked.connect(self.use_eraser)
 
     def draw_tpoints(self):
         self.mainwindow.pause_play()
@@ -515,3 +535,9 @@ class SegmentationWidget(TableWidget):
         with open('./dots.txt', 'w', encoding="UTF-8") as f:
             for item in items:
                 f.write(str(item) + " ")
+
+    def use_pencil(self):
+        print("i am using pencil")
+
+    def use_eraser(self):
+        print("i am using eraser")
