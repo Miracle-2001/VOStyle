@@ -257,6 +257,19 @@ class MyApp(QMainWindow):
 
     def get_cpoint(self):
         return self.graphicsView.get_cpoint()
+    
+    def use_pencil(self):
+        self.graphicsView.start_drawing()
+
+    def no_use_pencil(self):
+        self.graphicsView.end_drawing()
+
+    def use_eraser(self):
+        self.graphicsView.start_erase()
+
+    def no_use_eraser(self):
+        self.graphicsView.end_erase()
+
 
 
 if __name__ == "__main__":

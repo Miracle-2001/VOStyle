@@ -36,6 +36,20 @@ class GraphicsView(QGraphicsView):
         self.paint_dot = False  # 当前是否需要画点
         self.rec = None
         self.dot = None
+        self.drawing = False
+
+        self.pen = QPen()
+        self.pen.setColor(QColor(255,0,0))
+        self.pen = QPen(Qt.SolidLine)
+        self.pen.setWidth(20)
+
+        self.currx = 0
+        self.curry = 0
+        self.lastx = 0
+        self.lasty = 0
+
+        self.count = 0
+
 
     def contextMenuEvent(self, event):
         if not self.has_photo():
@@ -109,16 +123,23 @@ class GraphicsView(QGraphicsView):
         super(GraphicsView, self).mousePressEvent(event)
         viewpoint = QPoint(event.pos())
         scenePoint = self.mapToScene(viewpoint)
-        if self.paint_rec == True:
-            self.x0, self.y0, self.x1, self.y1 = (0, 0, 0, 0)
-            self.x0 = scenePoint.x()
-            self.y0 = scenePoint.y()
+        if self.drawing:
+            self.currx,self.curry,self.lastx,self.lasty = (0,0,0,0)
+            self.lastx = scenePoint.x()
+            self.lasty = scenePoint.y()
             self.flag = True
-        if self.paint_dot == True:
-            self.xc0, self.yc0, self.xc1, self.yc1 = (0, 0, 0, 0)
-            self.xc0 = scenePoint.x()
-            self.yc0 = scenePoint.y()
-            self.flag = True
+
+        else:
+            if self.paint_rec == True:
+                self.x0, self.y0, self.x1, self.y1 = (0, 0, 0, 0)
+                self.x0 = scenePoint.x()
+                self.y0 = scenePoint.y()
+                self.flag = True
+            if self.paint_dot == True:
+                self.xc0, self.yc0, self.xc1, self.yc1 = (0, 0, 0, 0)
+                self.xc0 = scenePoint.x()
+                self.yc0 = scenePoint.y()
+                self.flag = True
 
     def painting_dot(self):
         pen = QPen()
@@ -146,6 +167,13 @@ class GraphicsView(QGraphicsView):
             self.x0 - self.x1), np.abs(self.y0 - self.y1)))
         self._scene.addItem(self.rec)
 
+    def paint_path(self):
+        test = QGraphicsLineItem()
+        test.setPen(self.pen)
+        
+        test.setLine(self.lastx,self.lasty,self.currx,self.curry)
+        self._scene.addItem(test)
+
     def mouseReleaseEvent(self, event):
         super(GraphicsView, self).mouseReleaseEvent(event)
         if self.paint_rec == True and self.move == True:
@@ -164,20 +192,32 @@ class GraphicsView(QGraphicsView):
         self.move = True
         viewpoint = QPoint(event.pos())
         scenePoint = self.mapToScene(viewpoint)
-        if self.flag and self.paint_rec:
-            self.x1 = scenePoint.x()
-            self.y1 = scenePoint.y()
-            if self.rec != None:
-                self._scene.removeItem(self.rec)
-            self.update()
-            self.paint_rectangle()
-        if self.flag and self.paint_dot:
-            self.xc1 = scenePoint.x()
-            self.yc1 = scenePoint.y()
-            if self.dot != None:
-                self._scene.removeItem(self.dot)
-            self.update()
-            self.painting_dot()
+        if self.flag and self.drawing:
+            
+                self.currx = scenePoint.x()
+                self.curry = scenePoint.y()
+                self.paint_path()
+                
+                self.update() #更新显示
+
+                self.lastx = self.currx
+                self.lasty = self.curry
+
+        else:
+            if self.flag and self.paint_rec:
+                self.x1 = scenePoint.x()
+                self.y1 = scenePoint.y()
+                if self.rec != None:
+                    self._scene.removeItem(self.rec)
+                self.update()
+                self.paint_rectangle()
+            if self.flag and self.paint_dot:
+                self.xc1 = scenePoint.x()
+                self.yc1 = scenePoint.y()
+                if self.dot != None:
+                    self._scene.removeItem(self.dot)
+                self.update()
+                self.painting_dot()
 
     def startdrawingrec(self):
         self.paint_rec = True
@@ -201,3 +241,17 @@ class GraphicsView(QGraphicsView):
     def get_cpoint(self):
         # 返回画线的中点
         return int((self.xc0 + self.xc1) / 2), int((self.yc0 + self.yc1) / 2)
+
+    def start_drawing(self):
+        self.drawing = True
+
+    def end_drawing(self):
+        self.drawing = False
+
+    def start_erase(self):
+        self.drawing = True
+
+    def end_erase(self):
+        self.drawing = False
+
+    
