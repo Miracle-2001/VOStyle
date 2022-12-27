@@ -261,6 +261,7 @@ class SegmentationItem(MyItem):
                 return img
             bpoint = [self.x0, self.y0, self.x1, self.y1]
             cpoint = [self.xc, self.yc]
+            # res 是分割结果，可以储存一下？
             res = pred_click(img, bpoint, cpoint, self.model, self.mode)
             self.current_mask = combine_mask(self.current_mask, res)
 
