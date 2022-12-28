@@ -5,6 +5,56 @@ import os
 import scipy.misc as sm
 from PIL import Image
 
+'''
+颜色控件，参考
+https://blog.csdn.net/weixin_30325071/article/details/97344026
+https://blog.csdn.net/qq_15332903/article/details/54879615
+
+test:
+
+    app = QApplication(sys.argv) 
+    qb = ColorDialog() 
+    #res = qb.show()
+    res = qb.showDialog()
+    print(res)
+    sys.exit(app.exec_())
+
+'''
+from PyQt5.QtWidgets import QApplication, QPushButton, QColorDialog , QWidget
+from PyQt5.QtCore import Qt 
+from PyQt5.QtGui import QColor 
+import sys 
+
+class ColorDialog ( QWidget): 
+    def __init__(self ): 
+        super().__init__() 
+        #颜色值
+        color = QColor(0, 0, 0) 
+        #位置
+        self.setGeometry(300, 300, 350, 280) 
+        #标题
+        self.setWindowTitle('颜色选择') 
+        #按钮名称
+        self.button = QPushButton('Dialog', self) 
+        self.button.setFocusPolicy(Qt.NoFocus) 
+        #按钮位置
+        self.button.move(40, 20) 
+        #按钮绑定方法
+        self.button.clicked.connect(self.showDialog) 
+        self.setFocus()
+        self.widget = QWidget(self) 
+        self.widget.setStyleSheet('QWidget{background-color:%s} '%color.name()) 
+        self.widget.setGeometry(130, 22, 200, 100) 
+        #print(color)
+        
+    def showDialog(self): 
+        col = QColorDialog.getColor() 
+        print(col.name(),"\n")
+        if col.isValid(): 
+            self.widget.setStyleSheet('QWidget {background-color:%s}'%col.name()) 
+        print(col.getRgb())
+        return col.getRgb()
+        
 
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
@@ -21,6 +71,7 @@ class TableWidget(QTableWidget):
         self.setFocusPolicy(Qt.NoFocus)
         self.seg = False
         self.mode = 0
+        self.color = (0,0,0,0)
 
     def signal_connect(self):
         for spinbox in self.findChildren(QSpinBox):
@@ -44,6 +95,17 @@ class TableWidget(QTableWidget):
                 button.clicked.connect(self.save_current_mask)
             elif button.objectName() == "show mask":
                 button.clicked.connect(self.change_show_mask_state)
+            elif button.objectName() == "custom mask color":#选择mask颜色，施工中
+                button.clicked.connect(self.chose_color)
+    
+    def chose_color(self):
+        #app = QApplication(sys.argv) 
+        qb = ColorDialog() 
+        res = qb.showDialog()
+        print(res)
+        self.color = res
+        #sys.exit(app.exec_())
+
 
     def update_seg_data(self):
         with open('./dots.txt', 'r', encoding="UTF-8") as f:
@@ -59,13 +121,13 @@ class TableWidget(QTableWidget):
         self.mode = 1
         self.seg = True
         self.update_seg_data()
-        self.update_item()
+        self.update_item(self.color)
 
     def start_get_mask(self):
         self.mode = 2
         self.seg = True
         self.update_seg_data()
-        self.update_item()
+        self.update_item(self.color)
 
     # mask显示与否状态改变
     def change_show_mask_state(self):
@@ -76,7 +138,7 @@ class TableWidget(QTableWidget):
 
         self.seg = False
         # self.update_seg_data()
-        self.update_item()
+        self.update_item(self.color)
 
     # 保存当前标注
     def save_current_mask(self):
@@ -105,19 +167,19 @@ class TableWidget(QTableWidget):
             filename = filename.split('.')[0]+'.png'
             resized_image.save(os.path.join(save_dir, filename))
 
-    def update_item(self):
+    def update_item(self,color):
         if self.seg == False:
             self.mainwindow.stop_seg()
             self.mainwindow.set_seg_mode(self.mode)
             param = self.get_params()
             self.mainwindow.useListWidget.currentItem().update_params(param)
-            self.mainwindow.update_image()
+            self.mainwindow.update_image(self.color)
         elif self.seg == True:
             self.mainwindow.start_seg()
             self.mainwindow.set_seg_mode(self.mode)
             param = self.get_params()
             self.mainwindow.useListWidget.currentItem().update_params(param)
-            self.mainwindow.update_image()
+            self.mainwindow.update_image(self.color)
 
     def update_params(self, param=None):
         for key in param.keys():
@@ -455,6 +517,7 @@ class SegmentationWidget(TableWidget):
         self.seg_cpoint.clicked.connect(self.draw_cpoint)
         self.seg_tp_up.clicked.connect(self.update_tp)
         self.seg_cp_up.clicked.connect(self.update_cp)
+        #以上是真实发生的动作，以下是给这些动作格子命名
         self.x0 = 0
         self.y0 = 0
         self.x1 = 0
@@ -478,7 +541,14 @@ class SegmentationWidget(TableWidget):
         self.show_mask.setText("显示标注")
         self.show_mask.setObjectName("show mask")
         self.setItem(3, 0, QTableWidgetItem("show_mask"))
+        #custom_color
+        self.show_mask = QPushButton()
+        self.show_mask.setText("选择mask颜色")
+        self.show_mask.setObjectName("custom mask color")
+        self.setItem(4, 0, QTableWidgetItem("custom_mask_color"))
 
+
+        #设置按钮尺寸
         self.setCellWidget(2, 0, self.go)
         self.setCellWidget(3, 0, self.get_mask)
         self.setCellWidget(4, 0, self.save_mask)

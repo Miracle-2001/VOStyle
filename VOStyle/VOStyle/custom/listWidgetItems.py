@@ -249,7 +249,7 @@ class SegmentationItem(MyItem):
         model_name = './python_script/IOG_PASCAL.pth'
         self.model = loadnetwork(model_name)
 
-    def __call__(self, img, seg_mode):
+    def __call__(self, img, seg_mode,custom_color):
         # 里面调用语义分割的操作（先从文件中读取各个数值）
 
         if seg_mode <= 2:
@@ -262,7 +262,7 @@ class SegmentationItem(MyItem):
             bpoint = [self.x0, self.y0, self.x1, self.y1]
             cpoint = [self.xc, self.yc]
             # res 是分割结果，可以储存一下？
-            res = pred_click(img, bpoint, cpoint, self.model, self.mode)
+            res = pred_click(img, bpoint, cpoint, self.model, self.mode,custom_color)#施工自定义颜色
             self.current_mask = combine_mask(self.current_mask, res)
 
         if seg_mode == 1 or seg_mode == 3:

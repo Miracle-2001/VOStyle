@@ -187,8 +187,11 @@ def IOG_getmask(bgpoint, inside, image, net, use_scribble=False):
         result = (result > 0.3)*255
     return result
 
-
-def pred_click(image, bgpoint, cppoint, net, mode):
+'''
+调色板建设工程，杜海玮
+用户指定颜色变量 custom_color 
+'''
+def pred_click(image, bgpoint, cppoint, net, mode,custom_color):
     #model_name = './python_script/IOG_PASCAL.pth'
     img = Image.fromarray(cv2.cvtColor(
         image, cv2.COLOR_BGR2RGB))  # opencv 图像转换为Image图像
@@ -198,12 +201,17 @@ def pred_click(image, bgpoint, cppoint, net, mode):
     mask = cv2.cvtColor(np.asarray(mask), cv2.COLOR_RGB2BGR)
     random_color = [random.randint(0, 255), random.randint(
         0, 255), random.randint(0, 255)]
-
+    
     sum_mask = mask.sum(axis=2)
+    # for x in range(mask.shape[0]):
+    #     for y in range(mask.shape[1]):
+    #         if sum_mask[x][y] != 0:
+    #             mask[x, y, :] = random_color[:]
+    print(custom_color)
     for x in range(mask.shape[0]):
         for y in range(mask.shape[1]):
             if sum_mask[x][y] != 0:
-                mask[x, y, :] = random_color[:]
+                mask[x, y, :] = custom_color[:]
 
     return mask
     # result = add_mask(image, mask, mode)

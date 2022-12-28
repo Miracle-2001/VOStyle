@@ -78,12 +78,12 @@ class MyApp(QMainWindow):
                                  self.action_last_frame, self.action_next_frame
                                   ))
 
-        self.useListWidget = UsedListWidget(self)
-        self.funcListWidget = FuncListWidget(self)
-        self.stackedWidget = StackedWidget(self)
-        self.fileSystemTreeView = FileSystemTreeView(self)
-        self.graphicsView = GraphicsView(self)
-        self.videoProducer = videoSegmentationProducer(self)
+        self.useListWidget = UsedListWidget(self) #已添加的功能显示 右侧
+        self.funcListWidget = FuncListWidget(self) #图像对应的具体操作 上侧
+        self.stackedWidget = StackedWidget(self) #每个操作的属性功能 右侧
+        self.fileSystemTreeView = FileSystemTreeView(self) #文件选择 左侧
+        self.graphicsView = GraphicsView(self) #图像操作 中央
+        self.videoProducer = videoSegmentationProducer(self) #视频操作 中央
 
         self.dock_file = QDockWidget(self)
         self.dock_file.setWidget(self.fileSystemTreeView)
@@ -139,28 +139,31 @@ class MyApp(QMainWindow):
     def get_play_status(self):
         return self.playing
 
-    def update_image(self):
+    def update_image(self,color):#施工custom_color
         if self.src_img is None:
             return
-        img = self.process_image()
+        img = self.process_image(color)
         self.cur_img = img
         self.graphicsView.update_image(img)
 
-    def change_image(self, img):
+    def change_image(self, img,color = (0,0,0,0)):#施工custom_color
         self.src_img = img
-        img = self.process_image()
+        img = self.process_image(color)
         self.cur_img = img
         self.graphicsView.change_image(img)
 
-    def process_image(self):
+    def process_image(self,custom_color):#施工custom_color
+        custom_color1 = list(custom_color)[:3]
+        custom_color1 = custom_color1[::-1]
+        print(custom_color1)
         if self.seging == False:
             img = self.src_img.copy()
         # 如果正在进行seg操作的话
         elif self.seging is True:
             img = self.cur_img.copy()
         for i in range(self.useListWidget.count()):
-            if isinstance(self.useListWidget.item(i), SegmentationItem):
-                img = self.useListWidget.item(i)(img, self.seg_mode)
+            if isinstance(self.useListWidget.item(i), SegmentationItem):#函数来判断一个对象是否是一个已知的类型，类似 type()。施工custom_color
+                img = self.useListWidget.item(i)(img, self.seg_mode,custom_color1)
             else:
                 img = self.useListWidget.item(i)(img)
         return img

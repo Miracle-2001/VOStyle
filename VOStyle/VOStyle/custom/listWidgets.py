@@ -27,6 +27,7 @@ class UsedListWidget(MyListWidget):
         self.setMinimumWidth(200)
 
         self.move_item = None
+        self.color = (0,0,0,0)#自选颜色施工中
 
     def contextMenuEvent(self, e):
         # 右键菜单事件
@@ -44,12 +45,12 @@ class UsedListWidget(MyListWidget):
         self.takeItem(self.row(item))
         if isinstance(item, SegmentationItem):
             self.mainwindow.stop_seg()
-        self.mainwindow.update_image()  # 更新frame
+        self.mainwindow.update_image(self.color)  # 更新frame
         self.mainwindow.dock_attr.close()
 
     def dropEvent(self, event):
         super().dropEvent(event)
-        self.mainwindow.update_image()
+        self.mainwindow.update_image(self.color)
 
     def show_attr(self):
         item = self.itemAt(self.mapFromGlobal(QCursor.pos()))
@@ -75,12 +76,14 @@ class FuncListWidget(MyListWidget):
             self.addItem(itemType())
         self.itemClicked.connect(self.add_used_function)
 
+        self.color = (0,0,0,0)#自选颜色，施工中
+
     def add_used_function(self):
         func_item = self.currentItem()
         if type(func_item) in items:
             use_item = type(func_item)()
             self.mainwindow.useListWidget.addItem(use_item)
-            self.mainwindow.update_image()
+            self.mainwindow.update_image(self.color)
 
     def enterEvent(self, event):
         self.setCursor(Qt.PointingHandCursor)
