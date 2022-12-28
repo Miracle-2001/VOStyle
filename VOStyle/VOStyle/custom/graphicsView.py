@@ -283,7 +283,7 @@ class GraphicsView(QGraphicsView):
                 cv_image[row, col, 0] = b
                 cv_image[row, col, 1] = g
                 cv_image[row, col, 2] = r
-                
+
         final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')
         sum_covery = final_pic.sum(axis=2)
         for c in range(3):
