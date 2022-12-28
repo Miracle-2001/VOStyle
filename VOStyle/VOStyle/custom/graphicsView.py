@@ -260,7 +260,7 @@ class GraphicsView(QGraphicsView):
     def end_drawing(self):
         photo = self._photo.pixmap()
         
-        image = QImage(photo.size(),QImage.Format_ARGB32)
+        image = QImage(photo.size(),QImage.Format_RGB32)
         painter = QPainter()
         painter.begin(image)
         painter.setRenderHint(QPainter.Antialiasing)

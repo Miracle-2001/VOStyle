@@ -275,7 +275,7 @@ class MyApp(QMainWindow):
     def no_use_pencil(self):
         self.seg_img = self.graphicsView.end_drawing()
         self.change_mask(self.seg_img)
-        img = test_demo_mix.show_image_process(self.cur_img, self.seg_img, self.seg_mode)
+        img = test_demo_mix.show_image_process(self.src_img.copy(), self.seg_img, self.seg_mode)
         self.cur_img = img
         self.graphicsView.update_image(img)
 
@@ -284,7 +284,10 @@ class MyApp(QMainWindow):
 
     def no_use_eraser(self):
         self.seg_img = self.graphicsView.end_erase()
-
+        self.change_mask(self.seg_img)
+        img = test_demo_mix.show_image_process(self.src_img.copy(), self.seg_img, self.seg_mode)
+        self.cur_img = img
+        self.graphicsView.update_image(img)
 
 
 if __name__ == "__main__":
