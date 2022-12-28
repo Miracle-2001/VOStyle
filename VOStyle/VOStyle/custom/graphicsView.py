@@ -5,7 +5,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 
 import numpy as np
-
+import settting
 
 class GraphicsView(QGraphicsView):
     def __init__(self, parent=None):
@@ -36,19 +36,22 @@ class GraphicsView(QGraphicsView):
         self.paint_dot = False  # 当前是否需要画点
         self.rec = None
         self.dot = None
-        self.drawing = False
+        self.drawing = False    #是否在添加像素
+        self.drawitems = []
+        
 
-        self.pen = QPen()
-        self.pen.setColor(QColor(255,0,0))
         self.pen = QPen(Qt.SolidLine)
-        self.pen.setWidth(20)
+        self.pen.setColor(QColor(settting.PEN_COLOR[0],settting.PEN_COLOR[1],settting.PEN_COLOR[2]))
+        self.pen.setWidth(settting.PENCIL_WIDTH)
 
         self.currx = 0
         self.curry = 0
         self.lastx = 0
         self.lasty = 0
-
-        self.count = 0
+        
+        self._scene2 = QGraphicsScene(None)
+        
+        
 
 
     def contextMenuEvent(self, event):
@@ -92,6 +95,7 @@ class GraphicsView(QGraphicsView):
     def fitInView(self, scale=True):
         # 转化图片大小
         rect = QRectF(self._photo.pixmap().rect())
+        
         if not rect.isNull():
             self.setSceneRect(rect)
             if self.has_photo():
@@ -168,11 +172,13 @@ class GraphicsView(QGraphicsView):
         self._scene.addItem(self.rec)
 
     def paint_path(self):
-        test = QGraphicsLineItem()
-        test.setPen(self.pen)
+        item = QGraphicsLineItem()
+        item.setPen(self.pen)
         
-        test.setLine(self.lastx,self.lasty,self.currx,self.curry)
-        self._scene.addItem(test)
+        item.setLine(self.lastx,self.lasty,self.currx,self.curry)
+        self._scene.addItem(item)
+        self.drawitems.append(item)
+
 
     def mouseReleaseEvent(self, event):
         super(GraphicsView, self).mouseReleaseEvent(event)
@@ -242,16 +248,59 @@ class GraphicsView(QGraphicsView):
         # 返回画线的中点
         return int((self.xc0 + self.xc1) / 2), int((self.yc0 + self.yc1) / 2)
 
-    def start_drawing(self):
+    def start_drawing(self,img):
+        #self.mask.setPixmap(self.img_to_pixmap(img))
+        #self._scene2.addItem(self.mask)
+        img2 = self.img_to_pixmap(img)
+        self._scene2.addPixmap(img2)
+        self.pen.setColor(QColor(settting.PEN_COLOR[2],settting.PEN_COLOR[1],settting.PEN_COLOR[0]))
+        self.pen.setWidth(settting.PENCIL_WIDTH)
         self.drawing = True
 
     def end_drawing(self):
+        photo = self._photo.pixmap()
+        
+        image = QImage(photo.size(),QImage.Format_ARGB32)
+        painter = QPainter()
+        painter.begin(image)
+        painter.setRenderHint(QPainter.Antialiasing)
+        for item in self.drawitems:
+            self._scene2.addItem(item)
+        self._scene2.render(painter)
+        painter.end()
+        image.save('./work_folder/segmentation_temp/seg_photo.jpg')
+        final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')
+        
+        for item in self.drawitems:
+            self._scene.removeItem(item)
+            self._scene2.removeItem(item)
+        self.update()
         self.drawing = False
+        return final_pic
 
-    def start_erase(self):
+    def start_erase(self,img):
+        img2 = self.img_to_pixmap(img)
+        self._scene2.addPixmap(img2)
+        self.pen.setColor(QColor(settting.ERASE_COLOR[2],settting.ERASE_COLOR[1],settting.ERASE_COLOR[0]))
+        self.pen.setWidth(settting.ERASER_WIDTH)
         self.drawing = True
 
     def end_erase(self):
+        photo = self._photo.pixmap()
+        
+        image = QImage(photo.size(),QImage.Format_ARGB32)
+        painter = QPainter()
+        painter.begin(image)
+        for item in self.drawitems:
+            self._scene2.addItem(item)
+        self._scene2.render(painter)
+        painter.end()
+        image.save('./work_folder/segmentation_temp/seg_photo.jpg')
+        final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')
+        for item in self.drawitems:
+            self._scene.removeItem(item)
+            self._scene2.removeItem(item)
+        self.update()
         self.drawing = False
-
+        return final_pic
     

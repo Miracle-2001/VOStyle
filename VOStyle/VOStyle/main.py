@@ -11,7 +11,7 @@ from custom.listWidgets import FuncListWidget, UsedListWidget
 from custom.graphicsView import GraphicsView
 from custom.listWidgetItems import SegmentationItem
 from custom.videoSegmentation import videoSegmentationProducer
-
+from python_script import test_demo_mix
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -27,6 +27,8 @@ class MyApp(QMainWindow):
                                                  'work_folder', 'video_annotations')
         self.segmentationResults_save_dir = os.path.join(self.main_save_dir_root,
                                                          'work_folder', 'segmentation_results')
+        self.segmentationResults_temp_dir = os.path.join(self.main_save_dir_root,
+                                                    'work_folder', 'segmentation_temp')                                                 
         self.cur_frame_name = None
 
         if not os.path.exists(self.frames_save_dir):
@@ -35,6 +37,8 @@ class MyApp(QMainWindow):
             os.makedirs(self.annotations_save_dir)
         if not os.path.exists(self.segmentationResults_save_dir):
             os.makedirs(self.segmentationResults_save_dir)
+        if not os.path.exists(self.segmentationResults_temp_dir):
+            os.makedirs(self.segmentationResults_temp_dir)
 
         self.action_right_rotate = QAction(
             QIcon("icons/右旋转.png"), "向右旋转90", self)
@@ -164,6 +168,7 @@ class MyApp(QMainWindow):
                     self.seg_img = res
                 else:
                     img = self.useListWidget.item(i)(img, self.seg_mode)
+                    
             else:
                 img = self.useListWidget.item(i)(img)
         return img
@@ -175,6 +180,12 @@ class MyApp(QMainWindow):
                 combined_mask = self.useListWidget.item(i).get_mask_only()
                 break
         return combined_mask
+
+    def change_mask(self,img):
+        for i in range(self.useListWidget.count()):
+            if isinstance(self.useListWidget.item(i), SegmentationItem):
+                self.useListWidget.item(i).change_mask(img)
+                break 
 
     def start_play(self):
         if self.playing is False:
@@ -259,16 +270,20 @@ class MyApp(QMainWindow):
         return self.graphicsView.get_cpoint()
     
     def use_pencil(self):
-        self.graphicsView.start_drawing()
+        self.graphicsView.start_drawing(self.seg_img)
 
     def no_use_pencil(self):
-        self.graphicsView.end_drawing()
+        self.seg_img = self.graphicsView.end_drawing()
+        self.change_mask(self.seg_img)
+        img = test_demo_mix.show_image_process(self.cur_img, self.seg_img, self.seg_mode)
+        self.cur_img = img
+        self.graphicsView.update_image(img)
 
     def use_eraser(self):
-        self.graphicsView.start_erase()
+        self.graphicsView.start_erase(self.seg_img)
 
     def no_use_eraser(self):
-        self.graphicsView.end_erase()
+        self.seg_img = self.graphicsView.end_erase()
 
 
 

@@ -556,7 +556,6 @@ class SegmentationWidget(TableWidget):
 
     def use_eraser(self):
         print("i am using eraser")
-        settting.PEN_COLOR = settting.ERASE_COLOR
         self.mainwindow.use_eraser()
 
     def no_use_pencil(self):
