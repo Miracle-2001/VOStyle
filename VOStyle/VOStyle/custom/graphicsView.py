@@ -249,10 +249,10 @@ class GraphicsView(QGraphicsView):
         return int((self.xc0 + self.xc1) / 2), int((self.yc0 + self.yc1) / 2)
 
     def start_drawing(self,img):
-        #self.mask.setPixmap(self.img_to_pixmap(img))
-        #self._scene2.addItem(self.mask)
         img2 = self.img_to_pixmap(img)
+        img2.scaled(img2.width(),img2.height(),aspectRatioMode=Qt.IgnoreAspectRatio,transformMode=Qt.SmoothTransformation)
         self._scene2.addPixmap(img2)
+        
         self.pen.setColor(QColor(settting.PEN_COLOR[2],settting.PEN_COLOR[1],settting.PEN_COLOR[0]))
         self.pen.setWidth(settting.PENCIL_WIDTH)
         self.drawing = True
@@ -267,16 +267,37 @@ class GraphicsView(QGraphicsView):
         for item in self.drawitems:
             self._scene2.addItem(item)
         self._scene2.render(painter)
-        painter.end()
+        painter.end()     
         image.save('./work_folder/segmentation_temp/seg_photo.jpg')
+        tmp = image
+        cv_image = np.zeros((tmp.height(), tmp.width(), 3), dtype=np.uint8)
+        print('begin cv_image type:',type(cv_image))
+        for row in range(0, tmp.height()):
+            for col in range(0, tmp.width()):
+                r = qRed(tmp.pixel(col, row))
+                g = qGreen(tmp.pixel(col, row))
+                b = qBlue(tmp.pixel(col, row))
+                # cv_image[row, col, 0] = r
+                # cv_image[row, col, 1] = g
+                # cv_image[row, col, 2] = b
+                cv_image[row, col, 0] = b
+                cv_image[row, col, 1] = g
+                cv_image[row, col, 2] = r
+                
         final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')
-        
+        sum_covery = final_pic.sum(axis=2)
+        for c in range(3):
+            a = settting.PEN_COLOR[c]
+            final_pic[:, :, c] = np.where(
+                sum_covery <=10, 0,a)
+
+
         for item in self.drawitems:
             self._scene.removeItem(item)
             self._scene2.removeItem(item)
         self.update()
         self.drawing = False
-        return final_pic
+        return cv_image
 
     def start_erase(self,img):
         img2 = self.img_to_pixmap(img)
@@ -288,19 +309,41 @@ class GraphicsView(QGraphicsView):
     def end_erase(self):
         photo = self._photo.pixmap()
         
-        image = QImage(photo.size(),QImage.Format_ARGB32)
+        image = QImage(photo.size(),QImage.Format_RGB32)
         painter = QPainter()
         painter.begin(image)
+        painter.setRenderHint(QPainter.Antialiasing)
         for item in self.drawitems:
             self._scene2.addItem(item)
         self._scene2.render(painter)
         painter.end()
+        tmp = image
+        cv_image = np.zeros((tmp.height(), tmp.width(), 3), dtype=np.uint8)
+        print('begin cv_image type:',type(cv_image))
+        for row in range(0, tmp.height()):
+            for col in range(0, tmp.width()):
+                r = qRed(tmp.pixel(col, row))
+                g = qGreen(tmp.pixel(col, row))
+                b = qBlue(tmp.pixel(col, row))
+                # cv_image[row, col, 0] = r
+                # cv_image[row, col, 1] = g
+                # cv_image[row, col, 2] = b
+                cv_image[row, col, 0] = b
+                cv_image[row, col, 1] = g
+                cv_image[row, col, 2] = r
+
         image.save('./work_folder/segmentation_temp/seg_photo.jpg')
-        final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')
+        final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')      
+        sum_covery = final_pic.sum(axis=2)
+        for c in range(3):
+            a = settting.PEN_COLOR[c]
+            final_pic[:, :, c] = np.where(
+                sum_covery <=10, 0,a)
+
         for item in self.drawitems:
             self._scene.removeItem(item)
             self._scene2.removeItem(item)
         self.update()
         self.drawing = False
-        return final_pic
+        return cv_image
     
