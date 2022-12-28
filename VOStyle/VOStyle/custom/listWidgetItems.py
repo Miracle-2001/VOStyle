@@ -240,6 +240,7 @@ class SegmentationItem(MyItem):
         self.mode = 0
 
         self.current_mask = None
+        self.pure_mask = None
         # 初始化几个点
         items = [self.mode, self.x0, self.y0,
                  self.x1, self.y1, self.xc, self.yc]
@@ -264,11 +265,15 @@ class SegmentationItem(MyItem):
             # res 是分割结果，可以储存一下？
             res = pred_click(img, bpoint, cpoint, self.model, self.mode,custom_color)#施工自定义颜色
             self.current_mask = combine_mask(self.current_mask, res)
+            self.pure_mask = res 
 
         if seg_mode == 1 or seg_mode == 3:
-            return show_image_process(img, self.current_mask, seg_mode)
+            return self.pure_mask,show_image_process(img, self.current_mask, seg_mode)
         elif seg_mode == 4:
             return img
 
     def get_mask_only(self):
         return self.current_mask
+
+    def change_mask(self,img):
+        self.current_mask = img
