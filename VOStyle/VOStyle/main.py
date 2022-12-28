@@ -11,7 +11,7 @@ from custom.listWidgets import FuncListWidget, UsedListWidget
 from custom.graphicsView import GraphicsView
 from custom.listWidgetItems import SegmentationItem
 from custom.videoSegmentation import videoSegmentationProducer
-
+from python_script import test_demo_mix
 
 class MyApp(QMainWindow):
     def __init__(self):
@@ -30,6 +30,8 @@ class MyApp(QMainWindow):
         #以上直接硬编码了一系列保存文件夹，我认为可以加上一个动态根据日期命名的功能：
         #即在workfolder下加入以日期命名的work_xxxxxxxx(eg.work_20221218)，然后再进行分类储存，这样可以容易辨别每次实验的结果
         #另一个改进可能是可以指定存储路径
+        self.segmentationResults_temp_dir = os.path.join(self.main_save_dir_root,
+                                                    'work_folder', 'segmentation_temp')#zdj保留mask的图片                                                 
         self.cur_frame_name = None
 
         if not os.path.exists(self.frames_save_dir):
@@ -39,6 +41,9 @@ class MyApp(QMainWindow):
         if not os.path.exists(self.segmentationResults_save_dir):
             os.makedirs(self.segmentationResults_save_dir)
         #以上若储存路径不存在时的自适应创建文件夹功能，可以在以后的软件说明文档里面标出
+        if not os.path.exists(self.segmentationResults_temp_dir):
+            os.makedirs(self.segmentationResults_temp_dir)
+
         self.action_right_rotate = QAction(
             QIcon("icons/右旋转.png"), "向右旋转90", self)
         self.action_left_rotate = QAction(
@@ -117,6 +122,7 @@ class MyApp(QMainWindow):
         self.setWindowIcon(QIcon('icons/main.png'))
         self.src_img = None
         self.cur_img = None
+        self.seg_img = None
         self.seging = False
         self.cur_video = None
 
@@ -162,8 +168,15 @@ class MyApp(QMainWindow):
         elif self.seging is True:
             img = self.cur_img.copy()
         for i in range(self.useListWidget.count()):
-            if isinstance(self.useListWidget.item(i), SegmentationItem):#函数来判断一个对象是否是一个已知的类型，类似 type()。施工custom_color
-                img = self.useListWidget.item(i)(img, self.seg_mode,custom_color1)
+            # if isinstance(self.useListWidget.item(i), SegmentationItem):#函数来判断一个对象是否是一个已知的类型，类似 type()。施工custom_color
+            #     img = self.useListWidget.item(i)(img, self.seg_mode,custom_color1)
+            if isinstance(self.useListWidget.item(i), SegmentationItem):
+                if self.seg_mode == 1 or self.seg_mode ==3:
+                    res,img = self.useListWidget.item(i)(img, self.seg_mode,custom_color1)
+                    self.seg_img = res
+                else:
+                    img = self.useListWidget.item(i)(img, self.seg_mode,custom_color1)
+                    
             else:
                 img = self.useListWidget.item(i)(img)
         return img
@@ -175,6 +188,12 @@ class MyApp(QMainWindow):
                 combined_mask = self.useListWidget.item(i).get_mask_only()
                 break
         return combined_mask
+
+    def change_mask(self,img):
+        for i in range(self.useListWidget.count()):
+            if isinstance(self.useListWidget.item(i), SegmentationItem):
+                self.useListWidget.item(i).change_mask(img)
+                break 
 
     def start_play(self):
         if self.playing is False:
@@ -257,6 +276,26 @@ class MyApp(QMainWindow):
 
     def get_cpoint(self):
         return self.graphicsView.get_cpoint()
+    
+    def use_pencil(self,custom_color):#将画笔颜色与调色盘颜色统一
+        self.graphicsView.start_drawing(self.seg_img,custom_color)
+
+    def no_use_pencil(self):
+        self.seg_img = self.graphicsView.end_drawing()
+        self.change_mask(self.seg_img)
+        img = test_demo_mix.show_image_process(self.src_img.copy(), self.seg_img, self.seg_mode)
+        self.cur_img = img
+        self.graphicsView.update_image(img)
+
+    def use_eraser(self):
+        self.graphicsView.start_erase(self.seg_img)
+
+    def no_use_eraser(self):
+        self.seg_img = self.graphicsView.end_erase()
+        self.change_mask(self.seg_img)
+        img = test_demo_mix.show_image_process(self.src_img.copy(), self.seg_img, self.seg_mode)
+        self.cur_img = img
+        self.graphicsView.update_image(img)
 
 
 if __name__ == "__main__":

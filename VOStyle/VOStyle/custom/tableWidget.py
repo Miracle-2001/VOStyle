@@ -1,9 +1,11 @@
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
+from PyQt5.QtGui import *
 import os
 import scipy.misc as sm
 from PIL import Image
+import settting
 
 '''
 颜色控件，参考
@@ -486,6 +488,9 @@ class GammaITabelWidget(TableWidget):
         self.signal_connect()
 
 
+class Drawer():
+    pass
+
 class SegmentationWidget(TableWidget):
     def __init__(self, parent=None):
         # 设置控件属性
@@ -505,18 +510,43 @@ class SegmentationWidget(TableWidget):
         self.seg_cp_up.setObjectName("cpoint update")
         self.seg_cp_up.setText("上传")
 
+        self.pencil_start = QPushButton()
+        self.pencil_start.setObjectName("pencil start")
+        self.pencil_start.setText("铅笔")
+
+        self.pencil_end = QPushButton()
+        self.pencil_end.setObjectName("pencil end")
+        self.pencil_end.setText("结束")
+
+        self.eraser_start = QPushButton()
+        self.eraser_start.setObjectName("eraser start")
+        self.eraser_start.setText("橡皮")
+
+        self.eraser_end = QPushButton()
+        self.eraser_end.setObjectName("eraser end")
+        self.eraser_end.setText("结束")
+
         self.setColumnCount(2)
-        self.setRowCount(6)
+        self.setRowCount(8)
 
         self.setCellWidget(0, 0, self.seg_tpoint)
         self.setCellWidget(0, 1, self.seg_tp_up)
         self.setCellWidget(1, 0, self.seg_cpoint)
         self.setCellWidget(1, 1, self.seg_cp_up)
+        self.setCellWidget(2, 0, self.pencil_start)
+        self.setCellWidget(2, 1, self.pencil_end)
+        self.setCellWidget(3, 0, self.eraser_start)
+        self.setCellWidget(3, 1, self.eraser_end)
 
         self.seg_tpoint.clicked.connect(self.draw_tpoints)
         self.seg_cpoint.clicked.connect(self.draw_cpoint)
         self.seg_tp_up.clicked.connect(self.update_tp)
         self.seg_cp_up.clicked.connect(self.update_cp)
+        self.pencil_start.clicked.connect(self.use_pencil)
+        self.pencil_end.clicked.connect(self.no_use_pencil)
+        self.eraser_start.clicked.connect(self.use_eraser)
+        self.eraser_end.clicked.connect(self.no_use_eraser)
+
         #以上是真实发生的动作，以下是给这些动作格子命名
         self.x0 = 0
         self.y0 = 0
@@ -524,40 +554,41 @@ class SegmentationWidget(TableWidget):
         self.y1 = 0
         self.xc = 0
         self.yc = 0
+
         self.go = QPushButton()
         self.go.setText("语义分割")
         self.go.setObjectName("start button")
-        self.setItem(0, 0, QTableWidgetItem('start_button'))
+        self.setItem(2, 0, QTableWidgetItem('start_button'))
         self.get_mask = QPushButton()
         self.get_mask.setText("快乐扣图")
         self.get_mask.setObjectName("get mask")
-        self.setItem(1, 0, QTableWidgetItem("get_mask"))
+        self.setItem(3, 0, QTableWidgetItem("get_mask"))
         self.save_mask = QPushButton()
         self.save_mask.setText("保存标注")
         self.save_mask.setObjectName("save mask")
-        self.setItem(2, 0, QTableWidgetItem("save_mask"))
+        self.setItem(4, 0, QTableWidgetItem("save_mask"))
 
         self.show_mask = QPushButton()
         self.show_mask.setText("显示标注")
         self.show_mask.setObjectName("show mask")
-        self.setItem(3, 0, QTableWidgetItem("show_mask"))
+        self.setItem(5, 0, QTableWidgetItem("show_mask"))
         #custom_color
         self.show_mask = QPushButton()
         self.show_mask.setText("选择mask颜色")
         self.show_mask.setObjectName("custom mask color")
-        self.setItem(4, 0, QTableWidgetItem("custom_mask_color"))
+        self.setItem(6, 0, QTableWidgetItem("custom_mask_color"))
 
 
-        #设置按钮尺寸
-        self.setCellWidget(2, 0, self.go)
-        self.setCellWidget(3, 0, self.get_mask)
-        self.setCellWidget(4, 0, self.save_mask)
-        self.setCellWidget(5, 0, self.show_mask)
-        self.setSpan(2, 0, 1, 2)
-        self.setSpan(3, 0, 1, 2)
+        self.setCellWidget(4, 0, self.go)
+        self.setCellWidget(5, 0, self.get_mask)
+        self.setCellWidget(6, 0, self.save_mask)
+        self.setCellWidget(7, 0, self.show_mask)
         self.setSpan(4, 0, 1, 2)
         self.setSpan(5, 0, 1, 2)
+        self.setSpan(6, 0, 1, 2)
+        self.setSpan(7, 0, 1, 2)
         self.signal_connect()
+
 
     def draw_tpoints(self):
         self.mainwindow.pause_play()
@@ -585,3 +616,20 @@ class SegmentationWidget(TableWidget):
         with open('./dots.txt', 'w', encoding="UTF-8") as f:
             for item in items:
                 f.write(str(item) + " ")
+
+    def use_pencil(self):
+        print("i am using pencil")
+        self.mainwindow.use_pencil(self.color)
+
+
+    def use_eraser(self):
+        print("i am using eraser")
+        self.mainwindow.use_eraser()
+
+    def no_use_pencil(self):
+        print(1)
+        self.mainwindow.no_use_pencil()
+
+    def no_use_eraser(self):
+        print(1)
+        self.mainwindow.no_use_eraser()
