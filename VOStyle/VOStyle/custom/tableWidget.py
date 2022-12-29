@@ -5,6 +5,7 @@ from PyQt5.QtGui import *
 import os
 import scipy.misc as sm
 from PIL import Image
+import cv2
 import settting
 
 '''
@@ -22,41 +23,44 @@ test:
     sys.exit(app.exec_())
 
 '''
-from PyQt5.QtWidgets import QApplication, QPushButton, QColorDialog , QWidget
-from PyQt5.QtCore import Qt 
-from PyQt5.QtGui import QColor 
-import sys 
+from PyQt5.QtWidgets import QApplication, QPushButton, QColorDialog, QWidget
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QColor
+import sys
 
-class ColorDialog ( QWidget): 
-    def __init__(self ): 
-        super().__init__() 
-        #颜色值
-        color = QColor(0, 0, 0) 
-        #位置
-        self.setGeometry(300, 300, 350, 280) 
-        #标题
-        self.setWindowTitle('颜色选择') 
-        #按钮名称
-        self.button = QPushButton('Dialog', self) 
-        self.button.setFocusPolicy(Qt.NoFocus) 
-        #按钮位置
-        self.button.move(40, 20) 
-        #按钮绑定方法
-        self.button.clicked.connect(self.showDialog) 
+
+class ColorDialog (QWidget):
+    def __init__(self):
+        super().__init__()
+        # 颜色值
+        color = QColor(0, 0, 0)
+        # 位置
+        self.setGeometry(300, 300, 350, 280)
+        # 标题
+        self.setWindowTitle('颜色选择')
+        # 按钮名称
+        self.button = QPushButton('Dialog', self)
+        self.button.setFocusPolicy(Qt.NoFocus)
+        # 按钮位置
+        self.button.move(40, 20)
+        # 按钮绑定方法
+        self.button.clicked.connect(self.showDialog)
         self.setFocus()
-        self.widget = QWidget(self) 
-        self.widget.setStyleSheet('QWidget{background-color:%s} '%color.name()) 
-        self.widget.setGeometry(130, 22, 200, 100) 
-        #print(color)
-        
-    def showDialog(self): 
-        col = QColorDialog.getColor() 
-        print(col.name(),"\n")
-        if col.isValid(): 
-            self.widget.setStyleSheet('QWidget {background-color:%s}'%col.name()) 
+        self.widget = QWidget(self)
+        self.widget.setStyleSheet(
+            'QWidget{background-color:%s} ' % color.name())
+        self.widget.setGeometry(130, 22, 200, 100)
+        # print(color)
+
+    def showDialog(self):
+        col = QColorDialog.getColor()
+        print(col.name(), "\n")
+        if col.isValid():
+            self.widget.setStyleSheet(
+                'QWidget {background-color:%s}' % col.name())
         print(col.getRgb())
         return col.getRgb()
-        
+
 
 class TableWidget(QTableWidget):
     def __init__(self, parent=None):
@@ -73,7 +77,7 @@ class TableWidget(QTableWidget):
         self.setFocusPolicy(Qt.NoFocus)
         self.seg = False
         self.mode = 0
-        self.color = (0,0,0,0)
+        self.color = (0, 0, 0, 0)
 
     def signal_connect(self):
         for spinbox in self.findChildren(QSpinBox):
@@ -97,17 +101,16 @@ class TableWidget(QTableWidget):
                 button.clicked.connect(self.save_current_mask)
             elif button.objectName() == "show mask":
                 button.clicked.connect(self.change_show_mask_state)
-            elif button.objectName() == "custom mask color":#选择mask颜色，施工中
+            elif button.objectName() == "custom mask color":  # 选择mask颜色，施工中
                 button.clicked.connect(self.chose_color)
-    
+
     def chose_color(self):
-        #app = QApplication(sys.argv) 
-        qb = ColorDialog() 
+        #app = QApplication(sys.argv)
+        qb = ColorDialog()
         res = qb.showDialog()
         print(res)
         self.color = res
-        #sys.exit(app.exec_())
-
+        # sys.exit(app.exec_())
 
     def update_seg_data(self):
         with open('./dots.txt', 'r', encoding="UTF-8") as f:
@@ -152,10 +155,12 @@ class TableWidget(QTableWidget):
             save_dir = os.path.join(save_dir, 'masks_saved')
             mask = self.mainwindow.get_current_mask()
             print(save_dir)
+            print(mask)
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
-            sm.imsave(os.path.join(save_dir, filename), mask)
-        else:
+            cv2.imwrite(os.path.join(save_dir, filename), mask)  # 这里把sm变成了cv2
+
+        elif self.mainwindow.video_seging_refining == False:
             filename = self.mainwindow.cur_frame_name
             save_dir = self.mainwindow.annotations_save_dir
             self.mainwindow.add_new_object()
@@ -169,7 +174,19 @@ class TableWidget(QTableWidget):
             filename = filename.split('.')[0]+'.png'
             resized_image.save(os.path.join(save_dir, filename))
 
-    def update_item(self,color):
+        else:  # 已经视频分割 正在处于修正阶段
+            filename = self.mainwindow.cur_frame_name
+            save_dir = self.mainwindow.segmentationResults_save_dir
+            mask = self.mainwindow.get_current_mask()
+            mask = Image.fromarray(mask)
+            resized_image = mask.resize((1280, 720), Image.ANTIALIAS)
+            print(save_dir)
+            if not os.path.exists(save_dir):
+                os.makedirs(save_dir)
+            filename = filename.split('.')[0]+'.png'
+            resized_image.save(os.path.join(save_dir, filename))
+
+    def update_item(self, color):
         if self.seg == False:
             self.mainwindow.stop_seg()
             self.mainwindow.set_seg_mode(self.mode)
@@ -491,6 +508,7 @@ class GammaITabelWidget(TableWidget):
 class Drawer():
     pass
 
+
 class SegmentationWidget(TableWidget):
     def __init__(self, parent=None):
         # 设置控件属性
@@ -527,7 +545,7 @@ class SegmentationWidget(TableWidget):
         self.eraser_end.setText("结束")
 
         self.setColumnCount(2)
-        self.setRowCount(8)
+        self.setRowCount(9)
 
         self.setCellWidget(0, 0, self.seg_tpoint)
         self.setCellWidget(0, 1, self.seg_tp_up)
@@ -547,7 +565,7 @@ class SegmentationWidget(TableWidget):
         self.eraser_start.clicked.connect(self.use_eraser)
         self.eraser_end.clicked.connect(self.no_use_eraser)
 
-        #以上是真实发生的动作，以下是给这些动作格子命名
+        # 以上是真实发生的动作，以下是给这些动作格子命名
         self.x0 = 0
         self.y0 = 0
         self.x1 = 0
@@ -572,10 +590,10 @@ class SegmentationWidget(TableWidget):
         self.show_mask.setText("显示标注")
         self.show_mask.setObjectName("show mask")
         self.setItem(5, 0, QTableWidgetItem("show_mask"))
-        #custom_color
-        self.show_mask = QPushButton()
-        self.show_mask.setText("选择mask颜色")
-        self.show_mask.setObjectName("custom mask color")
+        # custom_color
+        self.custom_mask_color = QPushButton()
+        self.custom_mask_color.setText("选择mask颜色")
+        self.custom_mask_color.setObjectName("custom mask color")
         self.setItem(6, 0, QTableWidgetItem("custom_mask_color"))
 
 
@@ -583,12 +601,13 @@ class SegmentationWidget(TableWidget):
         self.setCellWidget(5, 0, self.get_mask)
         self.setCellWidget(6, 0, self.save_mask)
         self.setCellWidget(7, 0, self.show_mask)
+        self.setCellWidget(8, 0, self.custom_mask_color)
         self.setSpan(4, 0, 1, 2)
         self.setSpan(5, 0, 1, 2)
         self.setSpan(6, 0, 1, 2)
         self.setSpan(7, 0, 1, 2)
+        self.setSpan(8, 0, 1, 2)
         self.signal_connect()
-
 
     def draw_tpoints(self):
         self.mainwindow.pause_play()
@@ -620,7 +639,6 @@ class SegmentationWidget(TableWidget):
     def use_pencil(self):
         print("i am using pencil")
         self.mainwindow.use_pencil(self.color)
-
 
     def use_eraser(self):
         print("i am using eraser")

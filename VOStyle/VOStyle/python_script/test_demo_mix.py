@@ -242,6 +242,9 @@ def combine_mask(current, mask):
 
 def show_image_process(image, current, mode):
     # 展示图像，把image和mask融合
+    if current is None:
+        return image
+
     if mode == 1 or mode == 3:
         alpha = 0.4
 
@@ -252,7 +255,7 @@ def show_image_process(image, current, mode):
             image[:, :, c] = np.where(
                 sum_covery != 0, image[:, :, c] * (1 - alpha) + alpha*covery[:, :, c], image[:, :, c])
 
-    elif mode == 2:
+    elif mode == 2:  # 抠图 暂时没用
         sum_covery = covery.sum(axis=2)
         for c in range(3):
             image[:, :, c] = np.where(sum_covery == 0, 0, image[:, :, c])
