@@ -15,9 +15,13 @@
 - PIL
 
 另外，由于IOG和AOT网络过大，无法随代码一同上传，所以请自行下载并移动到指定位置。
+
 请进入https://github.com/shiyinzhang/Inside-Outside-Guidance下载IOG_PASCAL.pth（https://drive.google.com/file/d/1GLZIQlQ-3KUWaGTQ1g_InVcqesGfGcpW/view）
+
 并移动到python_script文件夹下
+
 请进入https://github.com/yoxu515/aot-benchmark下载R50_AOTL_PRE_YTB_DAV.pth（https://drive.google.com/file/d/1qJDYn3Ibpquu4ffYoQmVjg1YCbr2JQep/view）
+
 并移动到aot/pretrain_models文件夹下
 
 **主要文件：**
