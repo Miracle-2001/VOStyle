@@ -9,6 +9,16 @@
 - opencv系列库
 - pytorch 系列库
 - numpy
+- PyQt5
+- scipy
+- imageio
+- PIL
+
+另外，由于IOG和AOT网络过大，无法随代码一同上传，所以请自行下载并移动到指定位置。
+请进入https://github.com/shiyinzhang/Inside-Outside-Guidance下载IOG_PASCAL.pth（https://drive.google.com/file/d/1GLZIQlQ-3KUWaGTQ1g_InVcqesGfGcpW/view）
+并移动到python_script文件夹下
+请进入https://github.com/yoxu515/aot-benchmark下载R50_AOTL_PRE_YTB_DAV.pth（https://drive.google.com/file/d/1qJDYn3Ibpquu4ffYoQmVjg1YCbr2JQep/view）
+并移动到aot/pretrain_models文件夹下
 
 **主要文件：**
 
@@ -45,11 +55,9 @@
 
 2.点工具栏的OK
 
-3.上一帧下一帧按钮调整，每一帧都可以按语义分割来分割**（注意！①语义分割之后要点保存标注②改变当前帧的时候，要把已选功能中的语义分割删掉）**
+3.上一帧下一帧按钮调整，每一帧都可以按语义分割来分割**（注意！①语义分割之后要点保存标注）**
 
 4.点击ST，开始分割
-
-会生成json文件，在work_folder下
 
 5.点击ED，结束分割
 
