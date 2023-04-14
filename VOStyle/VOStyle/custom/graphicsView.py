@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import *
 import numpy as np
 import settting
 
+
 class GraphicsView(QGraphicsView):
     def __init__(self, parent=None):
         super(GraphicsView, self).__init__(parent=parent)
@@ -36,23 +37,20 @@ class GraphicsView(QGraphicsView):
         self.paint_dot = False  # 当前是否需要画点
         self.rec = None
         self.dot = None
-        self.drawing = False    #是否在添加像素
+        self.drawing = False  # 是否在添加像素
         self.drawitems = []
-        
 
         self.pen = QPen(Qt.SolidLine)
-        self.pen.setColor(QColor(settting.PEN_COLOR[0],settting.PEN_COLOR[1],settting.PEN_COLOR[2]))
+        self.pen.setColor(
+            QColor(settting.PEN_COLOR[0], settting.PEN_COLOR[1], settting.PEN_COLOR[2]))
         self.pen.setWidth(settting.PENCIL_WIDTH)
 
         self.currx = 0
         self.curry = 0
         self.lastx = 0
         self.lasty = 0
-        
-        self._scene2 = QGraphicsScene(None)
-        
-        
 
+        self._scene2 = QGraphicsScene(None)
 
     def contextMenuEvent(self, event):
         if not self.has_photo():
@@ -95,7 +93,7 @@ class GraphicsView(QGraphicsView):
     def fitInView(self, scale=True):
         # 转化图片大小
         rect = QRectF(self._photo.pixmap().rect())
-        
+
         if not rect.isNull():
             self.setSceneRect(rect)
             if self.has_photo():
@@ -128,7 +126,7 @@ class GraphicsView(QGraphicsView):
         viewpoint = QPoint(event.pos())
         scenePoint = self.mapToScene(viewpoint)
         if self.drawing:
-            self.currx,self.curry,self.lastx,self.lasty = (0,0,0,0)
+            self.currx, self.curry, self.lastx, self.lasty = (0, 0, 0, 0)
             self.lastx = scenePoint.x()
             self.lasty = scenePoint.y()
             self.flag = True
@@ -174,11 +172,10 @@ class GraphicsView(QGraphicsView):
     def paint_path(self):
         item = QGraphicsLineItem()
         item.setPen(self.pen)
-        
-        item.setLine(self.lastx,self.lasty,self.currx,self.curry)
+
+        item.setLine(self.lastx, self.lasty, self.currx, self.curry)
         self._scene.addItem(item)
         self.drawitems.append(item)
-
 
     def mouseReleaseEvent(self, event):
         super(GraphicsView, self).mouseReleaseEvent(event)
@@ -199,15 +196,15 @@ class GraphicsView(QGraphicsView):
         viewpoint = QPoint(event.pos())
         scenePoint = self.mapToScene(viewpoint)
         if self.flag and self.drawing:
-            
-                self.currx = scenePoint.x()
-                self.curry = scenePoint.y()
-                self.paint_path()
-                
-                self.update() #更新显示
 
-                self.lastx = self.currx
-                self.lasty = self.curry
+            self.currx = scenePoint.x()
+            self.curry = scenePoint.y()
+            self.paint_path()
+
+            self.update()  # 更新显示
+
+            self.lastx = self.currx
+            self.lasty = self.curry
 
         else:
             if self.flag and self.paint_rec:
@@ -250,30 +247,35 @@ class GraphicsView(QGraphicsView):
     '''
     画笔工程，zdj
     '''
-    def start_drawing(self,img,custom_color = settting.PEN_COLOR):
+
+    def start_drawing(self, img, custom_color=settting.PEN_COLOR):
         custom_color1 = list(custom_color)
         img2 = self.img_to_pixmap(img)
-        img2.scaled(img2.width(),img2.height(),aspectRatioMode=Qt.IgnoreAspectRatio,transformMode=Qt.SmoothTransformation)
+        img2.scaled(img2.width(), img2.height(
+        ), aspectRatioMode=Qt.IgnoreAspectRatio, transformMode=Qt.SmoothTransformation)
         self._scene2.addPixmap(img2)
-        
-        #self.pen.setColor(QColor(settting.PEN_COLOR[2],settting.PEN_COLOR[1],settting.PEN_COLOR[0]))
-        self.pen.setColor(QColor(custom_color1[0],custom_color1[1],custom_color1[2]))
+
+        # self.pen.setColor(QColor(settting.PEN_COLOR[2],settting.PEN_COLOR[1],settting.PEN_COLOR[0]))
+        self.pen.setColor(
+            QColor(custom_color1[0], custom_color1[1], custom_color1[2]))
         self.pen.setWidth(settting.PENCIL_WIDTH)
         self.drawing = True
 
     def end_drawing(self):
         photo = self._photo.pixmap()
-        
-        image = QImage(photo.size(),QImage.Format_RGB32)
-        painter = QPainter()
-        painter.begin(image)
-        painter.setRenderHint(QPainter.Antialiasing)
+
+        #image = QImage(photo.size(),QImage.Format_RGB32)
+        painter = QPainter(photo)
+        # painter.begin(image)
+        # painter.setRenderHint(QPainter.Antialiasing)
         for item in self.drawitems:
             self._scene2.addItem(item)
         self._scene2.render(painter)
-        painter.end()     
-        image.save('./work_folder/segmentation_temp/seg_photo.jpg')
-        tmp = image
+        painter.end()
+        photo.save('./work_folder/segmentation_temp/seg_photo.png')
+
+        '''        
+        tmp = photo
         cv_image = np.zeros((tmp.height(), tmp.width(), 3), dtype=np.uint8)
         print('begin cv_image type:',type(cv_image))
         for row in range(0, tmp.height()):
@@ -289,38 +291,52 @@ class GraphicsView(QGraphicsView):
                 cv_image[row, col, 2] = r
 
         final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')
+
+        '''
+        '''
         sum_covery = final_pic.sum(axis=2)
         for c in range(3):
             a = settting.PEN_COLOR[c]
             final_pic[:, :, c] = np.where(
                 sum_covery <=10, 0,a)
-
+        '''
 
         for item in self.drawitems:
             self._scene.removeItem(item)
             self._scene2.removeItem(item)
         self.update()
         self.drawing = False
-        return cv_image
 
-    def start_erase(self,img):
+        pixmap_img = photo
+        width, height = pixmap_img.width(), pixmap_img.height()
+        buffer = pixmap_img.toImage().bits().asstring(width * height * 4)
+        image_array = np.ndarray(shape=(height, width, 4),
+                                 buffer=buffer, dtype=np.uint8)
+        print(image_array.shape)
+        return image_array[:, :, :3]
+
+    def start_erase(self, img):
         img2 = self.img_to_pixmap(img)
         self._scene2.addPixmap(img2)
-        self.pen.setColor(QColor(settting.ERASE_COLOR[2],settting.ERASE_COLOR[1],settting.ERASE_COLOR[0]))
+        self.pen.setColor(QColor(
+            settting.ERASE_COLOR[2], settting.ERASE_COLOR[1], settting.ERASE_COLOR[0]))
         self.pen.setWidth(settting.ERASER_WIDTH)
         self.drawing = True
 
     def end_erase(self):
         photo = self._photo.pixmap()
-        
-        image = QImage(photo.size(),QImage.Format_RGB32)
-        painter = QPainter()
-        painter.begin(image)
-        painter.setRenderHint(QPainter.Antialiasing)
+
+        #image = QImage(photo.size(),QImage.Format_RGB32)
+        painter = QPainter(photo)
+        # painter.begin(image)
+        # painter.setRenderHint(QPainter.Antialiasing)
         for item in self.drawitems:
             self._scene2.addItem(item)
         self._scene2.render(painter)
         painter.end()
+
+        photo.save('../work_folder/segmentation_temp/seg_photo.jpg')
+        '''
         tmp = image
         cv_image = np.zeros((tmp.height(), tmp.width(), 3), dtype=np.uint8)
         print('begin cv_image type:',type(cv_image))
@@ -336,18 +352,26 @@ class GraphicsView(QGraphicsView):
                 cv_image[row, col, 1] = g
                 cv_image[row, col, 2] = r
 
-        image.save('./work_folder/segmentation_temp/seg_photo.jpg')
-        final_pic = cv2.imread('./work_folder/segmentation_temp/seg_photo.jpg')      
+        
+        final_pic = cv2.imread('../work_folder/segmentation_temp/seg_photo.jpg') 
+        '''
+
+        '''    
         sum_covery = final_pic.sum(axis=2)
         for c in range(3):
             a = settting.PEN_COLOR[c]
             final_pic[:, :, c] = np.where(
-                sum_covery <=10, 0,a)
+                sum_covery <=10, 0,a)'''
 
         for item in self.drawitems:
             self._scene.removeItem(item)
             self._scene2.removeItem(item)
         self.update()
         self.drawing = False
-        return cv_image
-    
+        pixmap_img = photo
+        width, height = pixmap_img.width(), pixmap_img.height()
+        buffer = pixmap_img.toImage().bits().asstring(width * height * 4)
+        image_array = np.ndarray(
+            shape=(height, width, 4), buffer=buffer, dtype=np.uint8)
+        print(image_array.shape)
+        return image_array[:, :, :3]

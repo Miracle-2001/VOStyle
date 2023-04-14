@@ -15,42 +15,43 @@ from python_script import test_demo_mix
 
 class MyApp(QMainWindow):
     def __init__(self):
+        # os.system("python .\\aot\\tools\\demo.py --video_name cxk")
         # super函数调用自己的父类，这里即调用QMainWindow这个父类的init函数
         super(MyApp, self).__init__()
         self.playing = True
         self.tool_bar = self.addToolBar('工具栏')
+        #当前地址
         self.main_save_dir_root = os.path.dirname(os.path.abspath(__file__))
+
+
+        #创建分割视频的images帧目录  
+        # self.frames_save_dir = os.path.join(self.main_save_dir_root,
+        #                                                 'work_folder','video_annotation')#,'frames','video_name')
+        # if not os.path.exists(self.frames_save_dir):
+        #     os.mkdir(self.frames_save_dir)
+
+        #创建分割视频的mask目录   
+        #保证二者‘video_name’一致#
         self.video_annotations_save_dir = os.path.join(self.main_save_dir_root,
-                                                       'work_folder', 'video_annotations')
-        self.frames_save_dir = os.path.join(self.main_save_dir_root,
-                                            'work_folder', 'video_frames')
-        self.annotations_save_dir = os.path.join(self.main_save_dir_root,
-                                                 'work_folder', 'video_annotations')
-        self.segmentationResults_save_dir = os.path.join(self.main_save_dir_root,
-                                                         'work_folder', 'segmentation_results', 'eval',
-                                                         'myVideo', 'myVideo_resnet101_cfbi_ckpt_unknown', 'video_annotations')
-        #以上直接硬编码了一系列保存文件夹，我认为可以加上一个动态根据日期命名的功能：
-        #即在workfolder下加入以日期命名的work_xxxxxxxx(eg.work_20221218)，然后再进行分类储存，这样可以容易辨别每次实验的结果
-        #另一个改进可能是可以指定存储路径
-        self.segmentationResults_temp_dir = os.path.join(self.main_save_dir_root,
-                                                    'work_folder', 'segmentation_temp')#zdj保留mask的图片                                                 
-                                                         
-        # 以上直接硬编码了一系列保存文件夹，我认为可以加上一个动态根据日期命名的功能：
-        # 即在workfolder下加入以日期命名的work_xxxxxxxx(eg.work_20221218)，然后再进行分类储存，这样可以容易辨别每次实验的结果
-        # 另一个改进可能是可以指定存储路径
+                                                        'work_folder','video_annotation')#,'masks','video_name')#, 'video_annotations')
+        if not os.path.exists(self.video_annotations_save_dir):
+            os.mkdir(self.video_annotations_save_dir)
+
+        # #生成的视频帧集标注结果保存地址
+        # self.segmentationResults_save_dir = os.path.join(self.main_save_dir_root,
+        #                                                         'work_folder', 'video_annotation')
+        # if not os.path.exists(self.segmentationResults_save_dir):
+        #     os.mkdir(self.segmentationResults_save_dir)
+
+        #######没动######
+        # self.segmentationResults_temp_dir = os.path.join(self.main_save_dir_root,
+        #                                             'work_folder', 'segmentation_temp')#zdj保留mask的图片                                                 
+        # if not os.path.exists(self.segmentationResults_temp_dir):
+        #     os.makedirs(self.segmentationResults_temp_dir)
+        #######没动######
+
         self.cur_frame_name = None
 
-        if not os.path.exists(self.frames_save_dir):
-            os.makedirs(self.frames_save_dir)
-        if not os.path.exists(self.annotations_save_dir):
-            os.makedirs(self.annotations_save_dir)
-        if not os.path.exists(self.segmentationResults_save_dir):
-            os.makedirs(self.segmentationResults_save_dir)
-        #以上若储存路径不存在时的自适应创建文件夹功能，可以在以后的软件说明文档里面标出
-        if not os.path.exists(self.segmentationResults_temp_dir):
-            os.makedirs(self.segmentationResults_temp_dir)
-
-        # 以上若储存路径不存在时的自适应创建文件夹功能，可以在以后的软件说明文档里面标出
         self.action_right_rotate = QAction(
             QIcon("icons/右旋转.png"), "向右旋转90", self)
         self.action_left_rotate = QAction(
@@ -98,7 +99,7 @@ class MyApp(QMainWindow):
         self.stackedWidget = StackedWidget(self) #每个操作的属性功能 右侧
         self.fileSystemTreeView = FileSystemTreeView(self) #文件选择 左侧
         self.graphicsView = GraphicsView(self) #图像操作 中央
-        self.videoProducer = videoSegmentationProducer(self,gap=5) #视频操作 中央
+        # self.videoProducer = videoSegmentationProducer(self,gap=5) #视频操作 中央
 
         self.dock_file = QDockWidget(self)
         self.dock_file.setWidget(self.fileSystemTreeView)
@@ -223,6 +224,7 @@ class MyApp(QMainWindow):
     def chosen_video(self):
         if self.filetype_is_video == False:
             return
+        self.videoProducer = videoSegmentationProducer(self,gap=5)
         self.video_seging = True
         self.videoProducer.change_cur_video(self.cur_video)
         self.videoProducer.split_cur_video()
@@ -318,6 +320,7 @@ class MyApp(QMainWindow):
 
     def no_use_pencil(self):
         self.seg_img = self.graphicsView.end_drawing()
+        print(self.seg_img.shape)
         self.change_mask(self.seg_img)
         img = test_demo_mix.show_image_process(self.src_img.copy(), self.seg_img, self.seg_mode)
         self.cur_img = img

@@ -95,8 +95,6 @@ class TableWidget(QTableWidget):
         for button in self.findChildren(QPushButton):  # 语义分割的运行按键
             if button.objectName() == "start button":
                 button.clicked.connect(self.start_get_seg)
-            elif button.objectName() == "get mask":
-                button.clicked.connect(self.start_get_mask)
             elif button.objectName() == "save mask":
                 button.clicked.connect(self.save_current_mask)
             elif button.objectName() == "show mask":
@@ -108,7 +106,7 @@ class TableWidget(QTableWidget):
         #app = QApplication(sys.argv)
         qb = ColorDialog()
         res = qb.showDialog()
-        print(res)
+        print('color ', res)
         self.color = res
         # sys.exit(app.exec_())
 
@@ -127,11 +125,8 @@ class TableWidget(QTableWidget):
         self.seg = True
         self.update_seg_data()
         self.update_item(self.color)
-
-    def start_get_mask(self):
-        self.mode = 2
-        self.seg = True
-        self.update_seg_data()
+        self.mode = 3
+        self.seg = False
         self.update_item(self.color)
 
     # mask显示与否状态改变
@@ -141,7 +136,7 @@ class TableWidget(QTableWidget):
         else:
             self.mode = 3  # show
 
-        self.seg = False
+        # self.seg = False
         # self.update_seg_data()
         self.update_item(self.color)
 
@@ -162,11 +157,11 @@ class TableWidget(QTableWidget):
 
         elif self.mainwindow.video_seging_refining == False:
             filename = self.mainwindow.cur_frame_name
-            save_dir = self.mainwindow.annotations_save_dir
+            save_dir = self.mainwindow.current_video_annotations_pre_save_dir
             self.mainwindow.add_new_object()
             mask = self.mainwindow.get_current_mask()
             mask = Image.fromarray(mask)
-            resized_image = mask.resize((1280, 720), Image.ANTIALIAS)
+            resized_image = mask #.resize((1280, 720), Image.ANTIALIAS)
 
             print(save_dir)
             if not os.path.exists(save_dir):
@@ -176,10 +171,10 @@ class TableWidget(QTableWidget):
 
         else:  # 已经视频分割 正在处于修正阶段
             filename = self.mainwindow.cur_frame_name
-            save_dir = self.mainwindow.segmentationResults_save_dir
+            save_dir = self.mainwindow.current_video_annotations_refine_save_dir
             mask = self.mainwindow.get_current_mask()
             mask = Image.fromarray(mask)
-            resized_image = mask.resize((1280, 720), Image.ANTIALIAS)
+            resized_image = mask #.resize((1280, 720), Image.ANTIALIAS)
             print(save_dir)
             if not os.path.exists(save_dir):
                 os.makedirs(save_dir)
@@ -545,7 +540,7 @@ class SegmentationWidget(TableWidget):
         self.eraser_end.setText("结束")
 
         self.setColumnCount(2)
-        self.setRowCount(9)
+        self.setRowCount(8)
 
         self.setCellWidget(0, 0, self.seg_tpoint)
         self.setCellWidget(0, 1, self.seg_tp_up)
@@ -577,10 +572,10 @@ class SegmentationWidget(TableWidget):
         self.go.setText("语义分割")
         self.go.setObjectName("start button")
         self.setItem(2, 0, QTableWidgetItem('start_button'))
-        self.get_mask = QPushButton()
-        self.get_mask.setText("快乐扣图")
-        self.get_mask.setObjectName("get mask")
-        self.setItem(3, 0, QTableWidgetItem("get_mask"))
+        # self.get_mask = QPushButton()
+        # self.get_mask.setText("快乐扣图")
+        # self.get_mask.setObjectName("get mask")
+        # self.setItem(3, 0, QTableWidgetItem("get_mask"))
         self.save_mask = QPushButton()
         self.save_mask.setText("保存标注")
         self.save_mask.setObjectName("save mask")
@@ -598,15 +593,13 @@ class SegmentationWidget(TableWidget):
 
 
         self.setCellWidget(4, 0, self.go)
-        self.setCellWidget(5, 0, self.get_mask)
+        self.setCellWidget(5, 0, self.custom_mask_color)
         self.setCellWidget(6, 0, self.save_mask)
         self.setCellWidget(7, 0, self.show_mask)
-        self.setCellWidget(8, 0, self.custom_mask_color)
         self.setSpan(4, 0, 1, 2)
         self.setSpan(5, 0, 1, 2)
         self.setSpan(6, 0, 1, 2)
         self.setSpan(7, 0, 1, 2)
-        self.setSpan(8, 0, 1, 2)
         self.signal_connect()
 
     def draw_tpoints(self):
